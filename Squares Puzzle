@@ -1,0 +1,99 @@
+       #include <iostream>
+#include <vector>
+#include <queue>
+#include <unordered_set>
+
+using namespace std;
+
+// Helper function to convert board to a unique string
+string boardToString(vector<vector<int>>& board) {
+    string str;
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 3; j++) {
+            str += to_string(board[i][j]);
+        }
+    }
+    return str;
+}
+
+// Helper function to convert string to board
+vector<vector<int>> stringToBoard(string str) {
+    vector<vector<int>> board(2, vector<int>(3));
+    int idx = 0;
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 3; j++) {
+            board[i][j] = str[idx++] - '0';
+        }
+    }
+    return board;
+}
+
+int minMovesToSolve(vector<vector<int>>& board) {
+    vector<vector<int>> solved = {{1, 2, 3}, {4, 5, 0}};
+    string solvedState = boardToString(solved);
+
+    string initial = boardToString(board);
+    if (initial == solvedState) {
+        return 0; // Board is already solved
+    }
+
+    queue<pair<string, int>> q;
+    q.push({initial, 0});
+
+    unordered_set<string> visited;
+    visited.insert(initial);
+
+    vector<vector<int>> directions = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+
+    while (!q.empty()) {
+        auto curr = q.front();
+        q.pop();
+
+        vector<vector<int>> currBoard = stringToBoard(curr.first);
+        int moves = curr.second;
+
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (currBoard[i][j] == 0) {
+                    for (auto& dir : directions) {
+                        int newRow = i + dir[0];
+                        int newCol = j + dir[1];
+
+                        if (newRow >= 0 && newRow < 2 && newCol >= 0 && newCol < 3) {
+                            swap(currBoard[i][j], currBoard[newRow][newCol]);
+
+                            string newState = boardToString(currBoard);
+
+                            if (newState == solvedState) {
+                                return moves + 1;
+                            }
+
+                            if (visited.find(newState) == visited.end()) {
+                                q.push({newState, moves + 1});
+                                visited.insert(newState);
+                            }
+
+                            swap(currBoard[i][j], currBoard[newRow][newCol]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return -1; // Board is not solvable
+}
+
+int main() {
+    vector<vector<int>> board(2, vector<int>(3));
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 3; j++) {
+            cin >> board[i][j];
+        }
+    }
+
+    int minMoves = minMovesToSolve(board);
+    cout << minMoves << endl;
+
+    return 0;
+}
